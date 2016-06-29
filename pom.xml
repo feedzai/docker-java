@@ -10,7 +10,7 @@
 	<groupId>com.github.docker-java</groupId>
 	<artifactId>docker-java</artifactId>
 	<packaging>jar</packaging>
-	<version>3.0.14</version>
+	<version>3.0.14_shaded</version>
 
 	<name>docker-java</name>
 	<url>https://github.com/docker-java/docker-java</url>
@@ -89,6 +89,19 @@
 		<maven-bundlor-plugin.version>1.1.2.RELEASE</maven-bundlor-plugin.version>
 		<maven-build-helper-plugin.version>3.0.0</maven-build-helper-plugin.version>
 	</properties>
+
+	<repositories>
+		<repository>
+			<id>com.springsource.repository.bundles.release</id>
+			<name>SpringSource Enterprise Bundle Repository - SpringSource Bundle Releases</name>
+			<url>http://repository.springsource.com/maven/bundles/release</url>
+		</repository>
+		<repository>
+			<id>com.springsource.repository.bundles.external</id>
+			<name>SpringSource Enterprise Bundle Repository - External Bundle Releases</name>
+			<url>http://repository.springsource.com/maven/bundles/external</url>
+		</repository>
+	</repositories>
 
 	<dependencies>
 		<dependency>
@@ -467,6 +480,19 @@
 				<groupId>org.eclipse.virgo.bundlor</groupId>
 				<artifactId>org.eclipse.virgo.bundlor.maven</artifactId>
 				<version>${maven-bundlor-plugin.version}</version>
+
+				<dependencies>
+					<dependency>
+						<groupId>org.eclipse.virgo.bundlor</groupId>
+						<artifactId>org.eclipse.virgo.bundlor</artifactId>
+						<version>1.1.2.RELEASE</version>
+					</dependency>
+					<dependency>
+						<groupId>org.eclipse.virgo.bundlor</groupId>
+						<artifactId>org.eclipse.virgo.bundlor.blint</artifactId>
+						<version>1.1.2.RELEASE</version>
+					</dependency>
+				</dependencies>
 				<executions>
 					<execution>
 						<id>bundlor</id>
@@ -545,7 +571,7 @@
 							<failOnViolation>true</failOnViolation>
 							<logViolationsToConsole>true</logViolationsToConsole>
 							<linkXRef>false</linkXRef>
-							<!-- if some IDE has integration and requires other place, propose 
+							<!-- if some IDE has integration and requires other place, propose
 								it -->
 							<configLocation>
 								src/test/resources/checkstyle/checkstyle-config.xml
@@ -602,6 +628,40 @@
 								<goals>
 									<goal>report-integration</goal>
 								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-shade-plugin</artifactId>
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>shade</goal>
+								</goals>
+								<configuration>
+									<filters>
+										<filter>
+											<artifact>*:*</artifact>
+											<excludes>
+												<exclude>META-INF/*.SF</exclude>
+												<exclude>META-INF/*.DSA</exclude>
+												<exclude>META-INF/*.RSA</exclude>
+											</excludes>
+										</filter>
+									</filters>
+									<relocations>
+										<relocation>
+											<pattern>com.fasterxml.jackson</pattern>
+											<shadedPattern>shaded.com.fasterxml.jackson</shadedPattern>
+											<!-- <excludes> -->
+											<!--     <exclude>org.codehaus.plexus.util.xml.Xpp3Dom</exclude> -->
+											<!--     <exclude>org.codehaus.plexus.util.xml.pull.*</exclude> -->
+											<!-- </excludes> -->
+										</relocation>
+									</relocations>
+								</configuration>
 							</execution>
 						</executions>
 					</plugin>
