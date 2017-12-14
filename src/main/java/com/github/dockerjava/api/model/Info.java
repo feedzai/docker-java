@@ -9,6 +9,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 import javax.annotation.CheckForNull;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -19,7 +20,8 @@ import java.util.Map;
  */
 @JsonInclude(Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class Info {
+public class Info implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * @since {@link com.github.dockerjava.core.RemoteApiVersion#VERSION_1_22}
@@ -221,6 +223,12 @@ public class Info {
 
     @JsonProperty("ClusterAdvertise")
     private String clusterAdvertise;
+
+    /**
+     * @since 1.24
+     */
+    @JsonProperty("Swarm")
+    private SwarmInfo swarm;
 
     /**
      * @see #architecture
@@ -1019,6 +1027,22 @@ public class Info {
      */
     public Info withSystemTime(String systemTime) {
         this.systemTime = systemTime;
+        return this;
+    }
+
+    /**
+     * @see #swarm
+     */
+    @CheckForNull
+    public SwarmInfo getSwarm() {
+        return swarm;
+    }
+
+    /**
+     * @see #swarm
+     */
+    public Info withSwarm(SwarmInfo swarm) {
+        this.swarm = swarm;
         return this;
     }
 

@@ -1,13 +1,5 @@
 package com.github.dockerjava.api.command;
 
-import java.util.List;
-
-import javax.annotation.CheckForNull;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -20,6 +12,14 @@ import com.github.dockerjava.api.model.VolumeBinds;
 import com.github.dockerjava.api.model.VolumeRW;
 import com.github.dockerjava.api.model.VolumesRW;
 import com.github.dockerjava.core.RemoteApiVersion;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
+
+import javax.annotation.CheckForNull;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -52,6 +52,12 @@ public class InspectContainerResponse {
 
     @JsonProperty("HostsPath")
     private String hostsPath;
+
+    /**
+     * @since {@link RemoteApiVersion#VERSION_1_17}
+     */
+    @JsonProperty("LogPath")
+    private String logPath;
 
     @JsonProperty("Id")
     private String id;
@@ -98,6 +104,9 @@ public class InspectContainerResponse {
     @JsonProperty("VolumesRW")
     private VolumesRW volumesRW;
 
+    @JsonProperty("Node")
+    private Node node;
+
     @JsonProperty("Mounts")
     private List<Mount> mounts;
 
@@ -106,7 +115,7 @@ public class InspectContainerResponse {
     }
 
     public Integer getSizeRootFs() {
-        return  sizeRootFs;
+        return sizeRootFs;
     }
 
     public String getCreated() {
@@ -168,6 +177,11 @@ public class InspectContainerResponse {
         return hostsPath;
     }
 
+    @CheckForNull
+    public String getLogPath() {
+        return logPath;
+    }
+
     public String getName() {
         return name;
     }
@@ -204,9 +218,18 @@ public class InspectContainerResponse {
         return execIds;
     }
 
+    /**
+     * Get the underlying swarm node info. This property does only contains a value in swarm-classic
+     * @return The underlying swarm-classic node info
+     * @CheckForNull
+     */
+    public Node getNode() {
+        return node;
+    }
+
     @Override
     public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -290,6 +313,13 @@ public class InspectContainerResponse {
         @CheckForNull
         @JsonProperty("FinishedAt")
         private String finishedAt;
+
+
+        /**
+         * @since Docker version 1.12
+         */
+        @JsonProperty("Health")
+        private HealthState health;
 
         /**
          * See {@link #status}
@@ -377,6 +407,10 @@ public class InspectContainerResponse {
         @CheckForNull
         public String getFinishedAt() {
             return finishedAt;
+        }
+
+        public HealthState getHealth() {
+            return health;
         }
 
         @Override
@@ -531,6 +565,64 @@ public class InspectContainerResponse {
         @Override
         public int hashCode() {
             return HashCodeBuilder.reflectionHashCode(this);
+        }
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public class Node {
+
+        @JsonProperty("ID")
+        private String id;
+
+        @JsonProperty("IP")
+        private String ip;
+
+        @JsonProperty("Addr")
+        private String addr;
+
+        @JsonProperty("Name")
+        private String name;
+
+        @JsonProperty("Cpus")
+        private Integer cpus;
+
+        @JsonProperty("Memory")
+        private Long memory;
+
+        @JsonProperty("Labels")
+        private Map<String, String> labels;
+
+        public String getId() {
+            return id;
+        }
+
+        public String getIp() {
+            return ip;
+        }
+
+        public String getAddr() {
+            return addr;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public Integer getCpus() {
+            return cpus;
+        }
+
+        public Long getMemory() {
+            return memory;
+        }
+
+        public Map<String, String> getLabels() {
+            return labels;
+        }
+
+        @Override
+        public String toString() {
+            return ToStringBuilder.reflectionToString(this);
         }
     }
 }

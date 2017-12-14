@@ -12,7 +12,6 @@ import java.util.UUID;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.filefilter.TrueFileFilter;
 
 import com.github.dockerjava.api.exception.DockerClientException;
 import com.github.dockerjava.core.GoLangFileMatch;
@@ -186,14 +185,43 @@ public class Dockerfile {
                         "Dockerfile is excluded by pattern '%s' in .dockerignore file", matchingIgnorePattern));
             }
 
-            Collection<File> filesInBuildContext = FileUtils.listFiles(baseDirectory, TrueFileFilter.INSTANCE,
-                    TrueFileFilter.INSTANCE);
+            addFilesInDirectory(baseDirectory);
+        }
 
-            for (File f : filesInBuildContext) {
-                if (effectiveMatchingIgnorePattern(f) == null) {
-                    filesToAdd.add(f);
-                }
+        /**
+         * Adds all files found in <code>directory</code> and subdirectories to
+         * <code>filesToAdd</code> collection. It also adds any empty directories
+         * if found.
+         *
+         * @param directory directory
+         * @throws DockerClientException when IO error occurs
+         */
+        private void addFilesInDirectory(File directory) {
+            File[] files = directory.listFiles();
+
+            if (files == null) {
+                throw new DockerClientException("Failed to read build context directory: " + baseDirectory.getAbsolutePath());
             }
+
+            if (files.length != 0) {
+                for (File f : files) {
+                    if (effectiveMatchingIgnorePattern(f) == null) {
+                        if (f.isDirectory()) {
+                            addFilesInDirectory(f);
+                        } else {
+                            filesToAdd.add(f);
+                        }
+                    }
+                }
+                // base directory should at least contains Dockerfile, but better check
+            } else if (!isBaseDirectory(directory)) {
+                // add empty directory
+                filesToAdd.add(directory);
+            }
+        }
+
+        private boolean isBaseDirectory(File directory) {
+            return directory.compareTo(baseDirectory) == 0;
         }
 
         /**
@@ -204,9 +232,10 @@ public class Dockerfile {
 
             int lineNumber = 0;
             for (String pattern : ignores) {
+                String goLangPattern = pattern.startsWith("!") ? pattern.substring(1) : pattern;
                 lineNumber++;
                 try {
-                    if (GoLangFileMatch.match(pattern, fileName)) {
+                    if (GoLangFileMatch.match(goLangPattern, fileName)) {
                         matches.add(pattern);
                     }
                 } catch (GoLangFileMatchException e) {
@@ -223,7 +252,8 @@ public class Dockerfile {
          * will be respected.
          */
         private String effectiveMatchingIgnorePattern(File file) {
-            String relativeFilename = FilePathUtil.relativize(baseDirectory, file);
+            // normalize path to replace '/' to '\' on Windows
+            String relativeFilename = FilenameUtils.normalize(FilePathUtil.relativize(baseDirectory, file));
 
             List<String> matchingPattern = matchingIgnorePatterns(relativeFilename);
 
@@ -233,21 +263,7 @@ public class Dockerfile {
 
             String lastMatchingPattern = matchingPattern.get(matchingPattern.size() - 1);
 
-            int lastMatchingPatternIndex = ignores.lastIndexOf(lastMatchingPattern);
-
-            if (lastMatchingPatternIndex == ignores.size() - 1) {
-                return lastMatchingPattern;
-            }
-
-            List<String> remainingIgnorePattern = ignores.subList(lastMatchingPatternIndex + 1, ignores.size());
-
-            for (String ignorePattern : remainingIgnorePattern) {
-                if (ignorePattern.equals("!" + relativeFilename)) {
-                    return null;
-                }
-            }
-
-            return lastMatchingPattern;
+            return !lastMatchingPattern.startsWith("!") ? lastMatchingPattern : null;
          }
     }
 }

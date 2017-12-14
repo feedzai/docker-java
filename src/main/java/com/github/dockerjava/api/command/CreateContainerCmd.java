@@ -2,10 +2,12 @@ package com.github.dockerjava.api.command;
 
 import com.github.dockerjava.api.exception.ConflictException;
 import com.github.dockerjava.api.exception.NotFoundException;
+import com.github.dockerjava.api.model.AuthConfig;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Capability;
 import com.github.dockerjava.api.model.Device;
 import com.github.dockerjava.api.model.ExposedPort;
+import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.Link;
 import com.github.dockerjava.api.model.LogConfig;
 import com.github.dockerjava.api.model.LxcConf;
@@ -21,6 +23,9 @@ import java.util.List;
 import java.util.Map;
 
 public interface CreateContainerCmd extends SyncDockerCmd<CreateContainerResponse> {
+
+    @CheckForNull
+    AuthConfig getAuthConfig();
 
     @CheckForNull
     List<String> getAliases();
@@ -188,10 +193,21 @@ public interface CreateContainerCmd extends SyncDockerCmd<CreateContainerRespons
     String getPidMode();
 
     @CheckForNull
+    HostConfig getHostConfig();
+
+    @CheckForNull
     String getCgroupParent();
 
     @CheckForNull
     Boolean isTty();
+
+    /**
+     * While using swarm classic, you can provide an optional auth config which will be used to pull images from a private registry,
+     * if the swarm node does not already have the docker image.
+     * Note: This option does not have any effect in normal docker
+     * @param authConfig The optional auth config
+     */
+    CreateContainerCmd withAuthConfig(AuthConfig authConfig);
 
     /**
      * Add network-scoped alias for the container
@@ -435,6 +451,8 @@ public interface CreateContainerCmd extends SyncDockerCmd<CreateContainerRespons
      * Set the PID (Process) Namespace mode for the container, 'host': use the host's PID namespace inside the container
      */
     CreateContainerCmd withPidMode(String pidMode);
+
+    CreateContainerCmd withHostConfig(HostConfig hostConfig);
 
     /**
      * @throws NotFoundException

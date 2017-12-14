@@ -11,6 +11,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 import javax.annotation.CheckForNull;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
@@ -20,7 +21,8 @@ import java.util.List;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-public class HostConfig {
+public class HostConfig implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     private static final List<String> PREDEFINED_NETWORKS = Arrays.asList("bridge", "host", "none");
 
@@ -190,8 +192,19 @@ public class HostConfig {
      * @since {@link RemoteApiVersion#VERSION_1_22}
      */
     @JsonProperty("ShmSize")
-    private String shmSize;
+    private Long shmSize;
 
+    /**
+     * @since ~{@link RemoteApiVersion#VERSION_1_23}
+     */
+    @JsonProperty("PidsLimit")
+    private Long pidsLimit;
+
+    /**
+     * @since ~{@link RemoteApiVersion#VERSION_1_30}
+     */
+    @JsonProperty("Runtime")
+    private String runtime;
 
     @JsonIgnore
     public Bind[] getBinds() {
@@ -401,7 +414,7 @@ public class HostConfig {
      * @see #shmSize
      */
     @CheckForNull
-    public String getShmSize() {
+    public Long getShmSize() {
         return shmSize;
     }
 
@@ -414,12 +427,24 @@ public class HostConfig {
     }
 
     /**
+     * @see #pidsLimit
+     */
+    @CheckForNull
+    public Long getPidsLimit() {
+        return pidsLimit;
+    }
+
+    /**
      * Parse the network mode as specified at
      * {@see https://github.com/docker/engine-api/blob/master/types/container/hostconfig_unix.go}
      */
     @JsonIgnore
     public boolean isUserDefinedNetwork() {
         return networkMode != null && !PREDEFINED_NETWORKS.contains(networkMode) && !networkMode.startsWith("container:");
+    }
+
+    public String getRuntime() {
+        return runtime;
     }
 
     @JsonIgnore
@@ -764,7 +789,7 @@ public class HostConfig {
     /**
      * @see #shmSize
      */
-    public HostConfig withShmSize(String shmSize) {
+    public HostConfig withShmSize(Long shmSize) {
         this.shmSize = shmSize;
         return this;
     }
@@ -790,6 +815,19 @@ public class HostConfig {
      */
     public HostConfig withVolumesFrom(VolumesFrom[] volumesFrom) {
         this.volumesFrom = volumesFrom;
+        return this;
+    }
+
+    /**
+     * @see #pidsLimit
+     */
+    public HostConfig withPidsLimit(Long pidsLimit) {
+        this.pidsLimit = pidsLimit;
+        return this;
+    }
+
+    public HostConfig withRuntime(String runtime) {
+        this.runtime = runtime;
         return this;
     }
     // end of auto-generated

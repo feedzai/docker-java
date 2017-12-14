@@ -1,5 +1,18 @@
 package com.github.dockerjava.netty;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.dockerjava.api.async.ResultCallback;
+import com.github.dockerjava.api.exception.DockerClientException;
+import com.github.dockerjava.api.model.Frame;
+import com.github.dockerjava.core.async.ResultCallbackTemplate;
+import com.github.dockerjava.netty.handler.FramedResponseStreamHandler;
+import com.github.dockerjava.netty.handler.HttpConnectionHijackHandler;
+import com.github.dockerjava.netty.handler.HttpRequestProvider;
+import com.github.dockerjava.netty.handler.HttpResponseHandler;
+import com.github.dockerjava.netty.handler.HttpResponseStreamHandler;
+import com.github.dockerjava.netty.handler.JsonResponseCallbackHandler;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -27,20 +40,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.dockerjava.api.async.ResultCallback;
-import com.github.dockerjava.api.exception.DockerClientException;
-import com.github.dockerjava.api.model.Frame;
-import com.github.dockerjava.core.async.ResultCallbackTemplate;
-import com.github.dockerjava.netty.handler.FramedResponseStreamHandler;
-import com.github.dockerjava.netty.handler.HttpConnectionHijackHandler;
-import com.github.dockerjava.netty.handler.HttpRequestProvider;
-import com.github.dockerjava.netty.handler.HttpResponseHandler;
-import com.github.dockerjava.netty.handler.HttpResponseStreamHandler;
-import com.github.dockerjava.netty.handler.JsonResponseCallbackHandler;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * This class is basically a replacement of javax.ws.rs.client.Invocation.Builder to allow simpler migration of JAX-RS code to a netty based
@@ -66,6 +66,63 @@ public class InvocationBuilder {
         @Override
         public void onNext(T object) {
             result = object;
+        }
+    }
+
+    public class SkipResultCallback extends ResultCallbackTemplate<ResponseCallback<Void>, Void> {
+        @Override
+        public void onNext(Void object) {
+        }
+    }
+
+    /**
+     * Implementation of {@link ResultCallback} with the single result event expected.
+     */
+    public static class AsyncResultCallback<A_RES_T>
+            extends ResultCallbackTemplate<AsyncResultCallback<A_RES_T>, A_RES_T> {
+
+        private A_RES_T result = null;
+
+        private final CountDownLatch resultReady = new CountDownLatch(1);
+
+        @Override
+        public void onNext(A_RES_T object) {
+            onResult(object);
+        }
+
+        private void onResult(A_RES_T object) {
+            if (resultReady.getCount() == 0) {
+                throw new IllegalStateException("Result has already been set");
+            }
+
+            try {
+                result = object;
+            } finally {
+                resultReady.countDown();
+            }
+        }
+
+        @Override
+        public void close() throws IOException {
+            try {
+                super.close();
+            } finally {
+                resultReady.countDown();
+            }
+        }
+
+        /**
+         * Blocks until {@link ResultCallback#onNext(Object)} was called for the first time
+         */
+        @SuppressWarnings("unchecked")
+        public A_RES_T awaitResult() {
+            try {
+                resultReady.await();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            throwFirstError();
+            return result;
         }
     }
 
@@ -197,7 +254,7 @@ public class InvocationBuilder {
 
         Channel channel = getChannel();
 
-        ResponseCallback<InputStream> callback = new ResponseCallback<InputStream>();
+        AsyncResultCallback<InputStream> callback = new AsyncResultCallback<>();
 
         HttpResponseHandler responseHandler = new HttpResponseHandler(requestProvider, callback);
         HttpResponseStreamHandler streamHandler = new HttpResponseStreamHandler(callback);
@@ -401,6 +458,31 @@ public class InvocationBuilder {
         channel.pipeline().addLast(new JsonObjectDecoder());
         channel.pipeline().addLast(jsonResponseHandler);
 
+        postChunkedStreamRequest(requestProvider, channel, body);
+    }
+
+    public void postStream(InputStream body) {
+        SkipResultCallback resultCallback = new SkipResultCallback();
+
+        HttpRequestProvider requestProvider = httpPostRequestProvider(null);
+
+        Channel channel = getChannel();
+
+        HttpResponseHandler responseHandler = new HttpResponseHandler(requestProvider, resultCallback);
+
+        channel.pipeline().addLast(new ChunkedWriteHandler());
+        channel.pipeline().addLast(responseHandler);
+
+        postChunkedStreamRequest(requestProvider, channel, body);
+
+        try {
+            resultCallback.awaitCompletion();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void postChunkedStreamRequest(HttpRequestProvider requestProvider, Channel channel, InputStream body) {
         HttpRequest request = requestProvider.getHttpRequest(resource);
 
         // don't accept FullHttpRequest here
@@ -423,7 +505,7 @@ public class InvocationBuilder {
 
         Channel channel = getChannel();
 
-        ResponseCallback<InputStream> resultCallback = new ResponseCallback<InputStream>();
+        AsyncResultCallback<InputStream> resultCallback = new AsyncResultCallback<>();
 
         HttpResponseHandler responseHandler = new HttpResponseHandler(requestProvider, resultCallback);
 

@@ -1,10 +1,84 @@
 Change Log
 ===
+## 3.1.0 WIP
+- Swarm Mode support.
+- Classic swarm support.
+ 
+ 
+## 3.0.14
+- Encode spaces as %20 rather than + in URL params
 
-3.0.1-SNAPSHOT
----
+## 3.0.13
+- Fix .dockerignore handling on Windows
+- Include empty directories in build context
+ 
+## 3.0.12
+- Make NettyDockerCmdExecFactory has compatibility both Linux and OSX automatically
+- Fix double encoding for netty.
+- filter config.json before unmarshalling (creds/auth)
+
+## 3.0.11
+- Add labels and attachable properties to network.
+- Set default socket timeout for RequestConfig.
+- Netty skip instead of throw error on non-linux os.
+- Clean tmp file after upload.
+- Filters ignore application/x-tar.
+- Allow user to call connectionManager's closeIdleConnections.
+ 
+## 3.0.10
+- Support for cache-from in build image command
+- Allow multiple tags in build image command 
+- Custom `db` logging type 
+- Allow an explicit Dockerfile location string to be specified to theuild command
+- Fix image build for docker 17 with 'tagged' word.
+ 
+## 3.0.9
+- NettyDockerCmdExecFactory ignores API version 
+- exclude commons-logging from httpclient since docker-java uses slf4j/logback
+- Generate OSGi compliant manifest
+- AuthResponse may contains token.
+
+## 3.0.8
+ - Use TLSv1.2 by default
+ - Health api
+ - Labels
+ - Support for multiple certificates 
+
+## 3.0.7
+ * https://github.com/docker-java/docker-java/milestone/17?closed=1
+ * HostConfig pidLimits
+ * Label image during build
+ * Expose 'User' property on ExecCreateCmd #707 #708
+
+## 3.0.6
+ * Fixed issue with jersey and unix domain sockets.
+ * [#703](https://github.com/docker-java/docker-java/pull/703) Allow to configure connection pool timeout.
+ * Make all models Serializable.
+ * [NETTY] Fix loadImage responce on 1.24 API.
+ * LogPath field for inspect container.
+ * [#700] (https://github.com/docker-java/docker-java/pull/700) Bugfix:donot throw RuntimeException when a error occured in awaitCompletion(long,TimeUnit)
+
+## 3.0.5
+ * Events updated to 1.24 API model.
+
+## 3.0.4
+ * Make cert util methods public.
+
+## 3.0.3
+ * [JERSEY] Don't send body for start container request.
+
+## 3.0.2
+ * Enhanced Dockerignore filtering.
+ * Added shmsize for hostconfig.
+ * Exposed HostConfig instead of spaghetty calls.
+
+## 3.0.1
 
 All changes
+* Updated all dependencies
+* [#643] (https://github.com/docker-java/docker-java/pull/643) Fixes for .dockerignore filtering 
+* [#627] (https://github.com/docker-java/docker-java/pull/627) Implementation of POST /images/load endpoint 
+* [#630] (https://github.com/docker-java/docker-java/pull/630) Fix: Second execution of a docker command in Netty implementation always fails 
 * [#596] (https://github.com/docker-java/docker-java/pull/596) Refactor configuration of SSL to allow override with custom config 
 * [#529] (https://github.com/docker-java/docker-java/pull/529) Refactor CertUtils. Support ECDSA and PrivateKey 
 * [#593] (https://github.com/docker-java/docker-java/pull/593) Added Device.parse() method with simple verification.

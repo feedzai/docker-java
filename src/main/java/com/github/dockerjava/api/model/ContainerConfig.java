@@ -10,6 +10,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 import javax.annotation.CheckForNull;
+import java.io.Serializable;
 import java.util.Map;
 
 /**
@@ -19,7 +20,8 @@ import java.util.Map;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-public class ContainerConfig {
+public class ContainerConfig implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     @JsonProperty("AttachStderr")
     private Boolean attachStderr;
@@ -83,6 +85,9 @@ public class ContainerConfig {
 
     @JsonProperty("WorkingDir")
     private String workingDir;
+
+    @JsonProperty("Healthcheck")
+    private HealthCheck healthCheck;
 
     @JsonIgnore
     public ExposedPort[] getExposedPorts() {
@@ -407,6 +412,14 @@ public class ContainerConfig {
     @CheckForNull
     public String getWorkingDir() {
         return workingDir;
+    }
+
+    /**
+     * @see #healthCheck
+     */
+    @CheckForNull
+    public HealthCheck getHealthcheck() {
+        return healthCheck;
     }
 
     /**

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Map;
+import java.util.Set;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -34,9 +35,26 @@ public interface BuildImageCmd extends AsyncDockerCmd<BuildImageCmd, BuildRespon
 
     /**
      * "t" in API
+     *
+     * @deprecated since docker API version 1.21 there can be multiple tags
+     * specified so use {@link #getTags()}
      */
     @CheckForNull
+    @Deprecated
     String getTag();
+
+    /**
+     * Multple "t" tags.
+     * @since {@link RemoteApiVersion#VERSION_1_21}
+     */
+    @CheckForNull
+    Set<String> getTags();
+
+    /**
+     * "Cache-from" in API
+     */
+    @CheckForNull
+    Set<String> getCacheFrom();
 
     /**
      * "remote" in API
@@ -101,15 +119,35 @@ public interface BuildImageCmd extends AsyncDockerCmd<BuildImageCmd, BuildRespon
     @CheckForNull
     Long getShmsize();
 
+    /**
+     * @since {@link RemoteApiVersion#VERSION_1_23}
+     */
+    @CheckForNull
+    Map<String, String> getLabels();
+
     // setters
 
+    /**
+     * @deprecated since docker API version 1.21 there can be multiple tags
+     * specified so use {@link #withTags(Set<String>)}
+     */
+    @Deprecated
     BuildImageCmd withTag(String tag);
+
+    BuildImageCmd withTags(Set<String> tags);
+
+    /*
+     * @since {@link RemoteApiVersion#VERSION_1_25}
+     */
+    BuildImageCmd withCacheFrom(Set<String> cacheFrom);
 
     BuildImageCmd withRemote(URI remote);
 
     BuildImageCmd withBaseDirectory(File baseDirectory);
 
     BuildImageCmd withDockerfile(File dockerfile);
+
+    BuildImageCmd withDockerfilePath(String dockerfilePath);
 
     BuildImageCmd withNoCache(Boolean noCache);
 
@@ -144,6 +182,11 @@ public interface BuildImageCmd extends AsyncDockerCmd<BuildImageCmd, BuildRespon
     *@since {@link RemoteApiVersion#VERSION_1_22}
     */
     BuildImageCmd withShmsize(Long shmsize);
+
+    /**
+    *@since {@link RemoteApiVersion#VERSION_1_23}
+    */
+    BuildImageCmd withLabels(Map<String, String> labels);
 
     interface Exec extends DockerCmdAsyncExec<BuildImageCmd, BuildResponseItem> {
     }

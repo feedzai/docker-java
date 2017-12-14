@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -12,7 +13,8 @@ import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class Network {
+public class Network implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     @JsonProperty("Id")
     private String id;
@@ -34,6 +36,12 @@ public class Network {
 
     @JsonProperty("Options")
     private Map<String, String> options;
+
+    @JsonProperty("Attachable")
+    private Boolean attachable;
+
+    @JsonProperty("Labels")
+    public Map<String, String> labels;
 
     public String getId() {
         return id;
@@ -61,6 +69,14 @@ public class Network {
 
     public Map<String, String> getOptions() {
         return options;
+    }
+
+    public Boolean isAttachable() {
+        return attachable;
+    }
+
+    public Map<String, String> getLabels() {
+        return labels;
     }
 
     @Override
@@ -139,6 +155,11 @@ public class Network {
             return this;
         }
 
+        public Ipam withDriver(String driver) {
+            this.driver = driver;
+            return this;
+        }
+
         @Override
         public String toString() {
             return ToStringBuilder.reflectionToString(this);
@@ -155,6 +176,9 @@ public class Network {
 
             @JsonProperty("Gateway")
             private String gateway;
+
+            @JsonProperty("NetworkID")
+            private String networkID;
 
             public String getSubnet() {
                 return subnet;
@@ -181,6 +205,14 @@ public class Network {
             public Config withGateway(String gateway) {
                 this.gateway = gateway;
                 return this;
+            }
+
+            public String getNetworkID() {
+                return networkID;
+            }
+
+            public void setNetworkID(String networkID) {
+                this.networkID = networkID;
             }
         }
     }

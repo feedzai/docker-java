@@ -12,7 +12,8 @@ target
 
 # Ignore InteliJ Idea project files
 .idea
-.idea/*
+!.idea/codeStyleSettings.xml
+!.idea/encodings.xml
 *.iml
 *.iws
 *.ipr
@@ -22,3 +23,4 @@ target
 
 #Ignore Test Output
 test-output
+/.checkstyle

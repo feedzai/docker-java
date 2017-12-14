@@ -23,6 +23,11 @@ public class RemoteApiVersion implements Serializable {
     private static final Pattern VERSION_REGEX = Pattern.compile("v?(\\d+)\\.(\\d+)");
 
     /**
+     * Online documentation is not available anymore.
+     */
+    public static final RemoteApiVersion VERSION_1_7 = RemoteApiVersion.create(1, 7);
+
+    /**
      * @see <a href="http://docs.docker.com/engine/reference/api/docker_remote_api_v1.16/">Docker API 1.16</a>
      */
     public static final RemoteApiVersion VERSION_1_16 = RemoteApiVersion.create(1, 16);
@@ -58,12 +63,38 @@ public class RemoteApiVersion implements Serializable {
     public static final RemoteApiVersion VERSION_1_22 = RemoteApiVersion.create(1, 22);
 
     /**
+     * @see <a href="https://github.com/docker/docker/blob/master/docs/reference/api/docker_remote_api_v1.23.md">Docker API 1.23</a>
+     */
+    public static final RemoteApiVersion VERSION_1_23 = RemoteApiVersion.create(1, 23);
+
+    /**
+     * @see <a href="https://github.com/docker/docker/blob/master/docs/reference/api/docker_remote_api_v1.24.md">Docker API 1.24</a>
+     */
+    public static final RemoteApiVersion VERSION_1_24 = RemoteApiVersion.create(1, 24);
+
+    /*
+     * @see <a href="https://docs.docker.com/engine/api/v1.25/">Docker API 1.25</a>
+     */
+    public static final RemoteApiVersion VERSION_1_25 = RemoteApiVersion.create(1, 25);
+
+    public static final RemoteApiVersion VERSION_1_26 = RemoteApiVersion.create(1, 26);
+    public static final RemoteApiVersion VERSION_1_27 = RemoteApiVersion.create(1, 27);
+    public static final RemoteApiVersion VERSION_1_29 = RemoteApiVersion.create(1, 29);
+    public static final RemoteApiVersion VERSION_1_30 = RemoteApiVersion.create(1, 30);
+
+
+    /**
      * Unknown, docker doesn't reflect reality. I.e. we implemented method, but for javadoc it not clear when it was added.
      */
     public static final RemoteApiVersion UNKNOWN_VERSION = new RemoteApiVersion(0, 0) {
 
         @Override
         public boolean isGreaterOrEqual(final RemoteApiVersion other) {
+            return false;
+        }
+
+        @Override
+        public boolean isGreater(RemoteApiVersion other) {
             return false;
         }
 
@@ -125,6 +156,11 @@ public class RemoteApiVersion implements Serializable {
         return false;
     }
 
+    public boolean isGreater(final RemoteApiVersion other) {
+        return major > other.major || (major == other.major && minor > other.minor);
+
+    }
+
     /**
      * @return String representation of version. i.e. "1.22"
      */
@@ -158,4 +194,5 @@ public class RemoteApiVersion implements Serializable {
     public String asWebPathPart() {
         return "v" + major + "." + minor;
     }
+
 }

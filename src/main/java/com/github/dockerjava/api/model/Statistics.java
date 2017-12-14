@@ -1,5 +1,6 @@
 package com.github.dockerjava.api.model;
 
+import java.io.Serializable;
 import java.util.Map;
 
 import javax.annotation.CheckForNull;
@@ -16,7 +17,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-public class Statistics {
+public class Statistics implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     @JsonProperty("read")
     private String read;
@@ -26,29 +28,45 @@ public class Statistics {
      */
     @CheckForNull
     @JsonProperty("networks")
-    private Map<String, Object> networks;
+    private Map<String, StatisticNetWorksConfig> networks;
 
     /**
      * @deprecated as of Docker Remote API 1.21, replaced by {@link #networks}
      */
     @Deprecated
     @JsonProperty("network")
-    private Map<String, Object> network;
+    private Map<String, StatisticNetWorksConfig> network;
 
     @JsonProperty("memory_stats")
-    private Map<String, Object> memoryStats;
+    private MemoryStatsConfig memoryStats;
 
     @JsonProperty("blkio_stats")
-    private Map<String, Object> blkioStats;
+    private BlkioStatsConfig blkioStats;
 
     @JsonProperty("cpu_stats")
-    private Map<String, Object> cpuStats;
+    private CpuStatsConfig cpuStats;
+
+    /**
+     * @since Docker Remote API 1.19
+     */
+    @JsonProperty("precpu_stats")
+    private CpuStatsConfig preCpuStats;
+
+    /**
+     * @since Docker Remote API 1.23
+     */
+    @JsonProperty("pids_stats")
+    private PidsStatsConfig pidsStats;
+
+    public String getRead() {
+        return read;
+    }
 
     /**
      * @since Docker Remote API 1.21
      */
     @CheckForNull
-    public Map<String, Object> getNetworks() {
+    public Map<String, StatisticNetWorksConfig> getNetworks() {
         return networks;
     }
 
@@ -56,20 +74,32 @@ public class Statistics {
      * @deprecated as of Docker Remote API 1.21, replaced by {@link #getNetworks()}
      */
     @Deprecated
-    public Map<String, Object> getNetwork() {
+    public Map<String, StatisticNetWorksConfig> getNetwork() {
         return network;
     }
 
-    public Map<String, Object> getCpuStats() {
+    public CpuStatsConfig getCpuStats() {
         return cpuStats;
     }
 
-    public Map<String, Object> getMemoryStats() {
+    /**
+     * The cpu statistic of last read, which is used for calculating the cpu usage percent.
+     * It is not the exact copy of the {@link #getCpuStats()}.
+     */
+    public CpuStatsConfig getPreCpuStats() {
+        return preCpuStats;
+    }
+
+    public MemoryStatsConfig getMemoryStats() {
         return memoryStats;
     }
 
-    public Map<String, Object> getBlkioStats() {
+    public BlkioStatsConfig getBlkioStats() {
         return blkioStats;
+    }
+
+    public PidsStatsConfig getPidsStats() {
+        return pidsStats;
     }
 
     @Override
